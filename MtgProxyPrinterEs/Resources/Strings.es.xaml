@@ -1,0 +1,25 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+                    <sys:String x:Key="Title">MTG Proxy Printer</sys:String>
+                    <sys:String x:Key="DeckListHeader">LISTA DEL MAZO</sys:String>
+                    <sys:String x:Key="DeckListHint">Formato: '4 Carta (SET) 123' o '4 Carta'</sys:String>
+                    <sys:String x:Key="LoadCards">Cargar cartas</sys:String>
+                    <sys:String x:Key="LoadSample">Cargar ejemplo</sys:String>
+                    <sys:String x:Key="CardsLoaded">CARTAS CARGADAS</sys:String>
+                    <sys:String x:Key="PreviewHeader">VISTA PREVIA</sys:String>
+                    <sys:String x:Key="PreviewPlaceholder">Selecciona&#10;una carta</sys:String>
+                    <sys:String x:Key="GeneratePdf">Generar PDF</sys:String>
+                    <sys:String x:Key="Language">Idioma:</sys:String>
+                    <sys:String x:Key="StatusReady">Listo. Pega tu lista y pulsa 'Cargar Cartas'.</sys:String>
+                    <sys:String x:Key="ArtButton">Arte</sys:String>
+                    <sys:String x:Key="ArtSelectorTitle">SELECCIONAR ARTE</sys:String>
+                    <sys:String x:Key="ArtSelectorFor">Arte para:</sys:String>
+                    <sys:String x:Key="ArtSelectorSearching">Buscando todas las ediciones...</sys:String>
+                    <sys:String x:Key="ArtSelectorFilter">Filtrar por idioma:</sys:String>
+                    <sys:String x:Key="ArtSelectorPreview">VISTA PREVIA</sys:String>
+                    <sys:String x:Key="ArtSelectorPlaceholder">Selecciona una edicion</sys:String>
+                    <sys:String x:Key="ArtSelectorConfirm">Confirmar seleccion</sys:String>
+                    <sys:String x:Key="ArtSelectorCancel">Cancelar</sys:String>
+</ResourceDictionary>

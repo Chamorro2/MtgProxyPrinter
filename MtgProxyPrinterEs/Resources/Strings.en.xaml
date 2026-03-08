@@ -1,0 +1,27 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+
+                    <sys:String x:Key="Title">MTG Proxy Printer</sys:String>
+                    <sys:String x:Key="DeckListHeader">DECK LIST</sys:String>
+                    <sys:String x:Key="DeckListHint">Format: '4 Card (SET) 123' or '4 Card'</sys:String>
+                    <sys:String x:Key="LoadCards">Load cards</sys:String>
+                    <sys:String x:Key="LoadSample">Load sample</sys:String>
+                    <sys:String x:Key="CardsLoaded">CARDS LOADED</sys:String>
+                    <sys:String x:Key="PreviewHeader">PREVIEW</sys:String>
+                    <sys:String x:Key="PreviewPlaceholder">Select&#10;a card</sys:String>
+                    <sys:String x:Key="GeneratePdf">Generate PDF</sys:String>
+                    <sys:String x:Key="Language">Language:</sys:String>
+                    <sys:String x:Key="StatusReady">Ready. Paste your deck list and press 'Load Cards'.</sys:String>
+                    <sys:String x:Key="ArtButton">Art</sys:String>
+                    <sys:String x:Key="ArtSelectorTitle">SELECT ART</sys:String>
+                    <sys:String x:Key="ArtSelectorFor">Art for:</sys:String>
+                    <sys:String x:Key="ArtSelectorSearching">Searching all editions...</sys:String>
+                    <sys:String x:Key="ArtSelectorFilter">Filter by language:</sys:String>
+                    <sys:String x:Key="ArtSelectorPreview">PREVIEW</sys:String>
+                    <sys:String x:Key="ArtSelectorPlaceholder">Select an edition</sys:String>
+                    <sys:String x:Key="ArtSelectorConfirm">Confirm selection</sys:String>
+                    <sys:String x:Key="ArtSelectorCancel">Cancel</sys:String>
+
+</ResourceDictionary>

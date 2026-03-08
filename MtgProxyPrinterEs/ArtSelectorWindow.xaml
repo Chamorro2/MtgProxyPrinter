@@ -1,0 +1,259 @@
+﻿<Window x:Class="MtgProxyPrinterEs.ArtSelectorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:conv="clr-namespace:MtgProxyPrinterEs.Converters"
+        Title="{DynamicResource ArtSelectorTitle}" Height="650" Width="900"
+        Background="#1a1a2e" WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResizeWithGrip">
+
+    <Window.Resources>
+        <conv:BoolToVisibilityConverter x:Key="BoolToVis"/>
+        <conv:InverseBoolConverter x:Key="InvBool"/>
+
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#e94560"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#c73652"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" Value="#444"/>
+                                <Setter Property="Foreground" Value="#888"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CancelButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+            <Setter Property="Background" Value="#2a2a3e"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#3a3a4e"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="ComboBox">
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#0f3460"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="6,4"/>
+        </Style>
+
+        <Style x:Key="ComboBoxItemStyle" TargetType="ComboBoxItem">
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="Background" Value="White"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="Background" Value="#e94560"/>
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="Background" Value="#0f3460"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="60"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- HEADER -->
+        <Border Grid.Row="0" Background="#0f3460">
+            <Grid Margin="16,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Width="6" Height="24" Background="#e94560"
+                            CornerRadius="3" Margin="0,0,10,0"/>
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource ArtSelectorTitle}"
+                                   Foreground="#e94560" FontWeight="Bold" FontSize="10"/>
+                        <TextBlock x:Name="CardNameRun" Foreground="White"
+                                   FontWeight="Bold" FontSize="15"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <TextBlock x:Name="StatusText" Grid.Column="2"
+                           Foreground="#a0a0b0" FontSize="11"
+                           VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <!-- FILTROS -->
+        <Border Grid.Row="1" Background="#16213e" Padding="16,10">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="{DynamicResource ArtSelectorFilter}" Foreground="#a0a0b0"
+                           FontSize="11" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <ComboBox x:Name="LangFilter" Width="160" FontSize="12"
+                          ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                          SelectionChanged="LangFilter_SelectionChanged"/>
+                <Border Width="1" Background="#0f3460" Margin="16,0"/>
+                <TextBlock x:Name="CountText" Foreground="#a0a0b0"
+                           FontSize="11" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <!-- CONTENIDO -->
+        <Grid Grid.Row="2" Margin="12,8,12,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="230"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Lista de ediciones -->
+            <Border Grid.Column="0" Background="#0d1b2a" CornerRadius="8"
+                    BorderBrush="#0f3460" BorderThickness="1" ClipToBounds="True">
+                <Grid>
+                    <StackPanel x:Name="LoadingText" VerticalAlignment="Center"
+                                HorizontalAlignment="Center" Visibility="Collapsed">
+                        <TextBlock Text="{DynamicResource ArtSelectorSearching}"
+                                   Foreground="#a0a0b0" FontSize="13"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="Scryfall..." Foreground="#555"
+                                   FontSize="10" HorizontalAlignment="Center"
+                                   Margin="0,4,0,0"/>
+                    </StackPanel>
+
+                    <ListBox x:Name="PrintsList"
+                             Background="Transparent" BorderThickness="0"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             SelectionChanged="PrintsList_SelectionChanged">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal" Margin="8"/>
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="4" Width="100" Height="140"
+                                        Cursor="Hand" CornerRadius="8"
+                                        ClipToBounds="True"
+                                        ToolTip="{Binding DisplayInfo}">
+                                    <Grid>
+                                        <Border Background="#1a1a2e"/>
+                                        <Image x:Name="CardImage" Stretch="UniformToFill"/>
+                                        <Border Background="#CC000000" VerticalAlignment="Bottom"
+                                                Padding="4,3" CornerRadius="0,0,8,8">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Set}" Foreground="White"
+                                                           FontSize="9" FontWeight="Bold"
+                                                           HorizontalAlignment="Center"/>
+                                                <TextBlock Text="{Binding Lang}" Foreground="#e94560"
+                                                           FontSize="9" HorizontalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Padding" Value="0"/>
+                                <Setter Property="Margin" Value="0"/>
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <Border x:Name="border" BorderThickness="3"
+                                                    BorderBrush="Transparent" CornerRadius="8">
+                                                <ContentPresenter/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter TargetName="border" Property="BorderBrush" Value="#e94560"/>
+                                                </Trigger>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="border" Property="BorderBrush" Value="#0f3460"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                    </ListBox>
+                </Grid>
+            </Border>
+
+            <!-- Preview -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="{DynamicResource ArtSelectorPreview}"
+                           Foreground="#e94560" FontWeight="Bold" FontSize="10"
+                           Margin="0,0,0,8"/>
+
+                <Border Grid.Row="1" Background="#0d1b2a" CornerRadius="12"
+                        BorderBrush="#0f3460" BorderThickness="1">
+                    <Grid>
+                        <TextBlock Text="{DynamicResource ArtSelectorPlaceholder}"
+                                   Foreground="#444" TextAlignment="Center"
+                                   VerticalAlignment="Center" HorizontalAlignment="Center"
+                                   FontSize="12"/>
+                        <Image x:Name="PreviewImage" Stretch="Uniform" Margin="8"/>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Row="2" Background="#16213e" CornerRadius="8"
+                        Padding="10" Margin="0,8,0,0">
+                    <StackPanel>
+                        <TextBlock x:Name="SelectedName" Foreground="White"
+                                   FontWeight="Bold" FontSize="12" TextWrapping="Wrap"/>
+                        <TextBlock x:Name="SelectedInfo" Foreground="#a0a0b0"
+                                   FontSize="10" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- BOTONES -->
+        <Border Grid.Row="3" Background="#16213e" Padding="16,10" Margin="0,8,0,0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="CancelButton"
+                        Content="{DynamicResource ArtSelectorCancel}"
+                        Style="{StaticResource CancelButton}"
+                        Margin="0,0,8,0" Click="CancelButton_Click"/>
+                <Button x:Name="ConfirmButton"
+                        Content="{DynamicResource ArtSelectorConfirm}"
+                        Style="{StaticResource PrimaryButton}"
+                        IsEnabled="False" Click="ConfirmButton_Click"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>
