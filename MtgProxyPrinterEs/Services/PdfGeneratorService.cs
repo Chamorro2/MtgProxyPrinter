@@ -23,8 +23,8 @@ namespace MtgProxyPrinterEs.Services
         /// The cache folder is created automatically if it does not exist.
         /// </summary>
         /// <param name="scryfall">Scryfall service used to download card images.</param>
-        /// <param name="cacheFolder">Folder path for the local image cache. Defaults to "cache_cartas".</param>
-        public PdfGeneratorService(ScryfallService scryfall, string cacheFolder = "cache_cartas")
+        /// <param name="cacheFolder">Folder path for the local image cache. Defaults to "cache_cards".</param>
+        public PdfGeneratorService(ScryfallService scryfall, string cacheFolder = "cache_cards")
         {
             _scryfall = scryfall;
             _cacheFolder = cacheFolder;

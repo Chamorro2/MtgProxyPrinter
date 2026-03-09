@@ -44,7 +44,7 @@ namespace MtgProxyPrinterEs
             dialog.ShowDialog();
 
             _vm.RefreshEntry(entry);
-            MostrarPreview(entry);
+            ShowPreview(entry);
         }
 
         /// <summary>
@@ -54,14 +54,14 @@ namespace MtgProxyPrinterEs
         private void ListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (_vm.SelectedEntry != null)
-                MostrarPreview(_vm.SelectedEntry);
+                ShowPreview(_vm.SelectedEntry);
         }
 
         /// <summary>
         /// Displays the selected card artwork in the preview image area.
         /// Retrieves the image URL from the selected print and loads it into a BitmapImage.
         /// </summary>
-        private void MostrarPreview(DeckEntry entry)
+        private void ShowPreview(DeckEntry entry)
         {
             if (entry.SelectedPrint == null) return;
 

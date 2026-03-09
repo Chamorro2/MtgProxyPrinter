@@ -30,7 +30,7 @@ namespace MtgProxyPrinterEs.ViewModels
             _pdfGenerator = new PdfGeneratorService(_scryfall);
 
             // Apply default language on startup so DynamicResource bindings resolve correctly
-            LocalizationService.Instance.SetLanguage(_idiomaApp);
+            LocalizationService.Instance.SetLanguage(_appLanguage);
         }
 
         // ─── Observable Properties (auto-generates getters, setters, and PropertyChanged) ───
@@ -60,25 +60,25 @@ namespace MtgProxyPrinterEs.ViewModels
         /// Preferred card language for Scryfall searches (e.g. "es", "en", "ja").
         /// Used when searching cards — tries this language first, then falls back to English.
         /// </summary>
-        [ObservableProperty] private string _idiomaPreferido = "es";
+        [ObservableProperty] private string _preferredLanguage = "es";
 
         // ─── UI Language (manual property to trigger LocalizationService on change) ───
 
         /// <summary>Backing field for the UI language selector.</summary>
-        private string _idiomaApp = "es";
+        private string _appLanguage  = "es";
 
         /// <summary>
         /// Currently selected UI language ("es" or "en").
         /// When changed, immediately swaps the ResourceDictionary via LocalizationService,
         /// causing all DynamicResource bindings in the UI to update instantly.
         /// </summary>
-        public string IdiomaApp
+        public string AppLanguage
         {
-            get => _idiomaApp;
+            get => _appLanguage;
             set
             {
-                if (_idiomaApp == value) return;
-                _idiomaApp = value;
+                if (_appLanguage == value) return;
+                _appLanguage = value;
                 OnPropertyChanged();
                 LocalizationService.Instance.SetLanguage(value);
             }
@@ -90,13 +90,13 @@ namespace MtgProxyPrinterEs.ViewModels
         /// All card languages available in the preferred language selector.
         /// These are the language codes supported by the Scryfall API.
         /// </summary>
-        public List<string> IdiomasDisponibles { get; } = new()
+        public List<string> AvailableLanguages { get; } = new()
         {
             "es", "en", "fr", "de", "it", "pt", "ja", "ko", "ru", "zhs", "zht"
         };
 
         /// <summary>UI languages available for the app interface (Spanish and English).</summary>
-        public List<string> IdiomasApp { get; } = new() { "es", "en" };
+        public List<string> AppLanguages { get; } = new() { "es", "en" };
 
         /// <summary>
         /// The deck entries currently loaded in the UI.
@@ -152,7 +152,7 @@ namespace MtgProxyPrinterEs.ViewModels
 
                 // Search Scryfall using the preferred language with English fallback
                 var card = await _scryfall.SearchCardAsync(
-                    entry.CardName, entry.SetCode, entry.CollectorNumber, IdiomaPreferido);
+                    entry.CardName, entry.SetCode, entry.CollectorNumber, _preferredLanguage);
 
                 if (card != null)
                 {
