@@ -130,7 +130,7 @@
                 <ColumnDefinition Width="230"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Lista de ediciones -->
+            <!-- Editions list -->
             <Border Grid.Column="0" Background="#0d1b2a" CornerRadius="8"
                     BorderBrush="#0f3460" BorderThickness="1" ClipToBounds="True">
                 <Grid>

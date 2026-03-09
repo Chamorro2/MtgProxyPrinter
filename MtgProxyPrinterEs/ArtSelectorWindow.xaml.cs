@@ -52,7 +52,7 @@ namespace MtgProxyPrinterEs
         protected override async void OnContentRendered(EventArgs e)
         {
             base.OnContentRendered(e);
-            await CargarEdicionesAsync();
+            await LoadEditionsAsync();
         }
 
         /// <summary>
@@ -60,76 +60,76 @@ namespace MtgProxyPrinterEs
         /// If they are already cached in the deck entry they are reused,
         /// otherwise they are requested from the Scryfall API.
         /// </summary>
-        private async Task CargarEdicionesAsync()
+        private async Task LoadEditionsAsync()
         {
             LoadingText.Visibility = Visibility.Visible;
             PrintsList.Visibility = Visibility.Collapsed;
-            StatusText.Text = "Buscando todas las ediciones...";
+            StatusText.Text = "Searching all editions...";
 
             if (_entry.AvailablePrints.Any())
                 _allPrints = _entry.AvailablePrints;
             else
                 _allPrints = await _scryfall.GetAllPrintsAsync(_entry.CardName);
 
-            MostrarEdiciones();
+            ShowEditions();
         }
 
         /// <summary>
         /// Prepares the language filter based on the available prints
         /// and then displays the filtered results.
         /// </summary>
-        private void MostrarEdiciones()
+        private void ShowEditions()
         {
-            var idiomas = _allPrints
+            var languages = _allPrints
                 .Select(p => p.Lang)
                 .Distinct()
                 .OrderBy(l => l)
                 .ToList();
 
-            idiomas.Insert(0, "Todos");
+            languages.Insert(0, "All");
 
-            var seleccionActual = LangFilter.SelectedItem as string;
+            var currentSelection = LangFilter.SelectedItem as string;
 
             LangFilter.SelectionChanged -= LangFilter_SelectionChanged;
 
-            LangFilter.ItemsSource = idiomas;
+            LangFilter.ItemsSource = languages;
 
-            LangFilter.SelectedItem = seleccionActual != null && idiomas.Contains(seleccionActual)
-                ? seleccionActual
-                : "Todos";
+            LangFilter.SelectedItem = currentSelection != null && languages.Contains(currentSelection)
+                ? currentSelection
+                : "All";
 
             LangFilter.SelectionChanged += LangFilter_SelectionChanged;
 
-            FiltrarYMostrar();
+            FilterAndShow();
         }
 
         /// <summary>
         /// Filters the available prints by language and updates the list UI.
         /// Also triggers asynchronous image loading.
         /// </summary>
-        private void FiltrarYMostrar()
+        private void FilterAndShow()
         {
-            var seleccionado = LangFilter.SelectedItem as string;
+            var selected = LangFilter.SelectedItem as string;
 
-            var filtradas = seleccionado == null || seleccionado == "Todos"
+            var filtered = selected == null || selected == "All"
                 ? _allPrints
-                : _allPrints.Where(p => p.Lang == seleccionado).ToList();
+                : _allPrints.Where(p => p.Lang == selected).ToList();
 
             PrintsList.Items.Clear();
 
-            foreach (var card in filtradas)
+            foreach (var card in filtered)
                 PrintsList.Items.Add(card);
 
-            CountText.Text = $"{filtradas.Count} ediciones encontradas";
+            CountText.Text = $"{filtered.Count} editions found";
             StatusText.Text = "";
             LoadingText.Visibility = Visibility.Collapsed;
             PrintsList.Visibility = Visibility.Visible;
 
-            _ = CargarImagenesAsync(filtradas);
+            _ = LoadImagesAsync(filtered);
 
             if (_entry.SelectedPrint != null)
             {
-                var actual = filtradas.FirstOrDefault(p => p.Id == _entry.SelectedPrint.Id);
+                var actual = filtered.FirstOrDefault(p => p.Id == _entry.SelectedPrint.Id);
                 if (actual != null)
                     PrintsList.SelectedItem = actual;
             }
@@ -139,9 +139,9 @@ namespace MtgProxyPrinterEs
         /// Asynchronously downloads and assigns images for each card printing.
         /// Images are downloaded from Scryfall and injected into the UI.
         /// </summary>
-        private async Task CargarImagenesAsync(List<ScryfallCard> cartas)
+        private async Task LoadImagesAsync(List<ScryfallCard> cards)
         {
-            foreach (var card in cartas)
+            foreach (var card in cards)
             {
                 var url = card.GetImageUrl("normal");
                 if (url == null) continue;
@@ -222,7 +222,7 @@ namespace MtgProxyPrinterEs
         private void LangFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (_allPrints.Any())
-                FiltrarYMostrar();
+                FilterAndShow();
         }
 
         /// <summary>

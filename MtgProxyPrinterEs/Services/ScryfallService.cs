@@ -70,19 +70,19 @@ namespace MtgProxyPrinterEs.Services
         /// <param name="name">Card name to search for.</param>
         /// <param name="setCode">Optional set code (e.g. "M21").</param>
         /// <param name="collectorNumber">Optional collector number (e.g. "152").</param>
-        /// <param name="idiomaPreferido">Preferred language code (e.g. "es", "en").</param>
+        /// <param name="preferredLanguage">Preferred language code (e.g. "es", "en").</param>
         public async Task<ScryfallCard?> SearchCardAsync(
             string name,
             string? setCode = null,
             string? collectorNumber = null,
-            string idiomaPreferido = "en")
+            string preferredLanguage = "en")
         {
             // Step 1: Try preferred language
-            var preferred = await SearchByNameAndLangAsync(name, idiomaPreferido);
+            var preferred = await SearchByNameAndLangAsync(name, preferredLanguage);
             if (preferred != null) return preferred;
 
             // Step 2: Fall back to English if preferred language failed
-            if (idiomaPreferido != "en")
+            if (preferredLanguage != "en")
             {
                 var en = await SearchByNameAndLangAsync(name, "en");
                 if (en != null) return en;
@@ -210,34 +210,34 @@ namespace MtgProxyPrinterEs.Services
 
             // Pattern 1: line starts with a number (quantity included)
             // Captures: (quantity) (card name) optional[(set) (collector number)]
-            var matchConCantidad = System.Text.RegularExpressions.Regex.Match(
+            var matchWithQuantity = System.Text.RegularExpressions.Regex.Match(
                 line,
                 @"^(\d+)\s+(.+?)(?:\s+\(([A-Za-z0-9]+)\)\s+(\S+))?\s*$"
             );
 
-            if (matchConCantidad.Success)
+            if (matchWithQuantity.Success)
                 return new DeckEntry
                 {
-                    Quantity = int.Parse(matchConCantidad.Groups[1].Value),
-                    CardName = matchConCantidad.Groups[2].Value.Trim(),
-                    SetCode = matchConCantidad.Groups[3].Success ? matchConCantidad.Groups[3].Value : null,
-                    CollectorNumber = matchConCantidad.Groups[4].Success ? matchConCantidad.Groups[4].Value : null
+                    Quantity = int.Parse(matchWithQuantity.Groups[1].Value),
+                    CardName = matchWithQuantity.Groups[2].Value.Trim(),
+                    SetCode = matchWithQuantity.Groups[3].Success ? matchWithQuantity.Groups[3].Value : null,
+                    CollectorNumber = matchWithQuantity.Groups[4].Success ? matchWithQuantity.Groups[4].Value : null
                 };
 
             // Pattern 2: no quantity prefix, assume 1 copy
             // Captures: (card name) optional[(set) (collector number)]
-            var matchSinCantidad = System.Text.RegularExpressions.Regex.Match(
+            var matchWithoutQuantity = System.Text.RegularExpressions.Regex.Match(
                 line,
                 @"^(.+?)(?:\s+\(([A-Za-z0-9]+)\)\s+(\S+))?\s*$"
             );
 
-            if (matchSinCantidad.Success)
+            if (matchWithoutQuantity.Success)
                 return new DeckEntry
                 {
                     Quantity = 1,
-                    CardName = matchSinCantidad.Groups[1].Value.Trim(),
-                    SetCode = matchSinCantidad.Groups[2].Success ? matchSinCantidad.Groups[2].Value : null,
-                    CollectorNumber = matchSinCantidad.Groups[3].Success ? matchSinCantidad.Groups[3].Value : null
+                    CardName = matchWithoutQuantity.Groups[1].Value.Trim(),
+                    SetCode = matchWithoutQuantity.Groups[2].Success ? matchWithoutQuantity.Groups[2].Value : null,
+                    CollectorNumber = matchWithoutQuantity.Groups[3].Success ? matchWithoutQuantity.Groups[3].Value : null
                 };
 
             return null;

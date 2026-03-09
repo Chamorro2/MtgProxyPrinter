@@ -143,8 +143,8 @@
 
                     <TextBlock Text="App:" Foreground="#a0a0b0" FontSize="11"
                                VerticalAlignment="Center" Margin="0,0,6,0"/>
-                    <ComboBox ItemsSource="{Binding IdiomasApp}"
-                              SelectedItem="{Binding IdiomaApp}"
+                    <ComboBox ItemsSource="{Binding AppLanguages}"
+                              SelectedItem="{Binding AppLanguage, Mode=TwoWay}"
                               Width="60" FontSize="12"
                               IsEnabled="{Binding IsBusy, Converter={StaticResource InvBool}}"
                               ItemContainerStyle="{StaticResource ComboBoxItemStyle}"/>
@@ -153,8 +153,8 @@
 
                     <TextBlock Text="{DynamicResource Language}" Foreground="#a0a0b0" FontSize="11"
                                VerticalAlignment="Center" Margin="0,0,6,0"/>
-                    <ComboBox ItemsSource="{Binding IdiomasDisponibles}"
-                              SelectedItem="{Binding IdiomaPreferido}"
+                    <ComboBox ItemsSource="{Binding AvailableLanguages}"
+                              SelectedItem="{Binding PreferredLanguage, Mode=TwoWay}"
                               Width="75" FontSize="12"
                               IsEnabled="{Binding IsBusy, Converter={StaticResource InvBool}}"
                               ItemContainerStyle="{StaticResource ComboBoxItemStyle}"/>
