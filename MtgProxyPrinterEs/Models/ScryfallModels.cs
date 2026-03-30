@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 
 namespace MtgProxyPrinterEs.Models
 {
@@ -76,20 +76,35 @@ namespace MtgProxyPrinterEs.Models
         public string DisplayInfo => $"{SetName} ({Set.ToUpper()}) #{CollectorNumber} [{Lang.ToUpper()}]";
 
         /// <summary>
-        /// Returns the image URL for the requested size ("normal" or "large").
+        /// Returns the image URL for the requested size: "normal", "large" or "png".
         /// Handles both single-faced and double-faced cards.
         /// For DFCs, always returns the front face image.
-        /// Returns null if no image is available.
+        /// Returns null if no image is available for that size.
         /// </summary>
         public string? GetImageUrl(string size = "large")
         {
             // Standard single-faced card
             if (ImageUris != null)
-                return size == "normal" ? ImageUris.Normal : ImageUris.Large;
+            {
+                return size switch
+                {
+                    "normal" => ImageUris.Normal,
+                    "png" => ImageUris.Png,
+                    _ => ImageUris.Large,
+                };
+            }
 
             // Double-faced card: use the front face image
             if (CardFaces?.Count > 0 && CardFaces[0].ImageUris != null)
-                return size == "normal" ? CardFaces[0].ImageUris!.Normal : CardFaces[0].ImageUris!.Large;
+            {
+                var u = CardFaces[0].ImageUris!;
+                return size switch
+                {
+                    "normal" => u.Normal,
+                    "png" => u.Png,
+                    _ => u.Large,
+                };
+            }
 
             return null;
         }
@@ -108,6 +123,13 @@ namespace MtgProxyPrinterEs.Models
         /// <summary>Large size image (~672x936px). Used for high-quality PDF generation.</summary>
         [JsonProperty("large")]
         public string? Large { get; set; }
+
+        /// <summary>
+        /// PNG size (lossless / máxima resolución cuando Scryfall lo expone).
+        /// No está disponible para todas las cartas.
+        /// </summary>
+        [JsonProperty("png")]
+        public string? Png { get; set; }
     }
 
     /// <summary>

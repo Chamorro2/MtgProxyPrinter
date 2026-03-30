@@ -1,8 +1,9 @@
-﻿using MtgProxyPrinterEs.Models;
+using MtgProxyPrinterEs.Models;
 using MtgProxyPrinterEs.Services;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
+using System.IO;
 
 namespace MtgProxyPrinterEs
 {
@@ -24,6 +25,10 @@ namespace MtgProxyPrinterEs
         /// The chosen print will be stored here.
         /// </summary>
         private readonly DeckEntry _entry;
+
+        private readonly ImageEnhancementService _imageEnhancer = new();
+        private const double CardWidthCm = 6.35;
+        private const double CardHeightCm = 8.89;
 
         /// <summary>
         /// Cached list of all printings available for the card.
@@ -195,7 +200,7 @@ namespace MtgProxyPrinterEs
         /// Triggered when the selected print changes.
         /// Updates the preview panel with card information and image.
         /// </summary>
-        private void PrintsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void PrintsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (PrintsList.SelectedItem is not ScryfallCard card) return;
 
@@ -203,16 +208,30 @@ namespace MtgProxyPrinterEs
             SelectedName.Text = card.DisplayName;
             SelectedInfo.Text = card.DisplayInfo;
 
-            var url = card.GetImageUrl("normal");
+            var url = card.GetImageUrl("png")
+                      ?? card.GetImageUrl("large")
+                      ?? card.GetImageUrl("normal");
             if (url == null) return;
 
-            var bitmap = new BitmapImage();
-            bitmap.BeginInit();
-            bitmap.UriSource = new Uri(url);
-            bitmap.CacheOption = BitmapCacheOption.OnLoad;
-            bitmap.EndInit();
+            try
+            {
+                var bytes = await _scryfall.DownloadImageAsync(url);
+                if (bytes == null) return;
 
-            PreviewImage.Source = bitmap;
+                var enhanced = _imageEnhancer.EnhanceForCardPrint(bytes, CardWidthCm, CardHeightCm);
+
+                var bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.StreamSource = new MemoryStream(enhanced);
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.EndInit();
+
+                PreviewImage.Source = bitmap;
+            }
+            catch
+            {
+                // Si la mejora falla, no bloqueamos la selección.
+            }
         }
 
         /// <summary>

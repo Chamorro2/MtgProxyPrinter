@@ -1,4 +1,4 @@
-﻿using MtgProxyPrinterEs.Models;
+using MtgProxyPrinterEs.Models;
 using Newtonsoft.Json;
 using System.Net.Http;
 
@@ -172,7 +172,12 @@ namespace MtgProxyPrinterEs.Services
 
                 // Only keep printings that have a usable image
                 if (printsResult?.Data != null)
-                    allPrints.AddRange(printsResult.Data.Where(c => c.GetImageUrl() != null));
+                    allPrints.AddRange(
+                        printsResult.Data.Where(c =>
+                            c.GetImageUrl("png") != null
+                            || c.GetImageUrl("large") != null
+                            || c.GetImageUrl("normal") != null)
+                    );
             }
             catch { }
 

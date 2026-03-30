@@ -1,8 +1,10 @@
-﻿using MtgProxyPrinterEs.Models;
+using MtgProxyPrinterEs.Models;
 using MtgProxyPrinterEs.ViewModels;
+using MtgProxyPrinterEs.Services;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
+using System.IO;
 
 namespace MtgProxyPrinterEs
 {
@@ -18,6 +20,10 @@ namespace MtgProxyPrinterEs
         /// including the deck entries and commands.
         /// </summary>
         private readonly MainViewModel _vm;
+        private readonly ImageEnhancementService _imageEnhancer = new();
+
+        private const double CardWidthCm = 6.35;
+        private const double CardHeightCm = 8.89;
 
         /// <summary>
         /// Initializes the main window and assigns the ViewModel
@@ -61,20 +67,34 @@ namespace MtgProxyPrinterEs
         /// Displays the selected card artwork in the preview image area.
         /// Retrieves the image URL from the selected print and loads it into a BitmapImage.
         /// </summary>
-        private void ShowPreview(DeckEntry entry)
+        private async void ShowPreview(DeckEntry entry)
         {
             if (entry.SelectedPrint == null) return;
 
-            var url = entry.SelectedPrint.GetImageUrl("normal");
+            var url = entry.SelectedPrint.GetImageUrl("png")
+                      ?? entry.SelectedPrint.GetImageUrl("large")
+                      ?? entry.SelectedPrint.GetImageUrl("normal");
             if (url == null) return;
 
-            var bitmap = new BitmapImage();
-            bitmap.BeginInit();
-            bitmap.UriSource = new Uri(url);
-            bitmap.CacheOption = BitmapCacheOption.OnLoad;
-            bitmap.EndInit();
+            try
+            {
+                var bytes = await _vm._scryfall.DownloadImageAsync(url);
+                if (bytes == null) return;
 
-            PreviewImage.Source = bitmap;
+                var enhanced = _imageEnhancer.EnhanceForCardPrint(bytes, CardWidthCm, CardHeightCm);
+
+                var bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.StreamSource = new MemoryStream(enhanced);
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.EndInit();
+
+                PreviewImage.Source = bitmap;
+            }
+            catch
+            {
+                // Si falla la descarga/mejora, mantenemos el flujo sin romper la app.
+            }
         }
     }
 }

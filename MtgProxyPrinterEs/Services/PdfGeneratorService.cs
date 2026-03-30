@@ -1,4 +1,4 @@
-﻿using MtgProxyPrinterEs.Models;
+using MtgProxyPrinterEs.Models;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf;
 using System.IO;
@@ -14,9 +14,13 @@ namespace MtgProxyPrinterEs.Services
     public class PdfGeneratorService
     {
         private readonly ScryfallService _scryfall;
+        private readonly ImageEnhancementService _imageEnhancer = new();
 
         /// <summary>Local folder where downloaded card images are cached.</summary>
         private readonly string _cacheFolder;
+
+        private const double CardWidthCm = 6.35;
+        private const double CardHeightCm = 8.89;
 
         /// <summary>
         /// Creates a new PdfGeneratorService.
@@ -48,8 +52,8 @@ namespace MtgProxyPrinterEs.Services
             var document = new PdfDocument();
 
             // Standard MTG card size in points (1cm = 28.35pt)
-            double cardW = XUnit.FromCentimeter(6.35).Point;
-            double cardH = XUnit.FromCentimeter(8.89).Point;
+            double cardW = XUnit.FromCentimeter(CardWidthCm).Point;
+            double cardH = XUnit.FromCentimeter(CardHeightCm).Point;
 
             // A4 page dimensions in points
             double pageW = XUnit.FromCentimeter(21.0).Point;
@@ -119,27 +123,34 @@ namespace MtgProxyPrinterEs.Services
 
         /// <summary>
         /// Returns the image bytes for a card, using the local cache when available.
-        /// Cache file name format: {Name}_{Set}_{CollectorNumber}_{Lang}.jpg
+        /// Cache file name format: {Name}_{Set}_{CollectorNumber}_{Lang}_enhanced.png
         /// If not cached, downloads from Scryfall and saves to the cache folder.
         /// </summary>
         private async Task<byte[]?> GetCardImageAsync(ScryfallCard card)
         {
             var safeName = MakeSafeFileName($"{card.Name}_{card.Set}_{card.CollectorNumber}_{card.Lang}");
-            var cachePath = Path.Combine(_cacheFolder, safeName + ".jpg");
+            var cachePath = Path.Combine(_cacheFolder, safeName + "_enhanced.png");
 
             // Return cached image if it exists
             if (File.Exists(cachePath))
                 return await File.ReadAllBytesAsync(cachePath);
 
-            // Download from Scryfall and cache it
-            var url = card.GetImageUrl("large");
+            // Descargamos la mejor fuente disponible (preferimos PNG).
+            // Si no existe PNG, caemos a JPG/normal.
+            var url = card.GetImageUrl("png")
+                      ?? card.GetImageUrl("large")
+                      ?? card.GetImageUrl("normal");
+
             if (url == null) return null;
 
             var bytes = await _scryfall.DownloadImageAsync(url);
-            if (bytes != null)
-                await File.WriteAllBytesAsync(cachePath, bytes);
+            if (bytes == null) return null;
 
-            return bytes;
+            // Mejora automática para reducir el “aspecto escaneado” cuando la fuente viene baja en detalle.
+            var enhanced = _imageEnhancer.EnhanceForCardPrint(bytes, CardWidthCm, CardHeightCm);
+            await File.WriteAllBytesAsync(cachePath, enhanced);
+
+            return enhanced;
         }
 
         /// <summary>
