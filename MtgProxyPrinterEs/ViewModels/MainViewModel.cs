@@ -4,8 +4,6 @@ using MtgProxyPrinterEs.Models;
 using MtgProxyPrinterEs.Services;
 using System.Collections.ObjectModel;
 
-using System.Diagnostics;
-
 namespace MtgProxyPrinterEs.ViewModels
 {
     /// <summary>
