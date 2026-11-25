@@ -186,7 +186,7 @@ namespace MtgProxyPrinterEs.ViewModels
         /// </summary>
         private async Task LoadAllPrintsAsync(DeckEntry entry)
         {
-            var prints = await _scryfall.GetAllPrintsAsync(entry.CardName);
+            var prints = await _scryfall.GetAllPrintsAsync(entry.SelectedPrint);
             entry.AvailablePrints = prints;
         }
 

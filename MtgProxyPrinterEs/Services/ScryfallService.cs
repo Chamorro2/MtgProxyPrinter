@@ -102,19 +102,29 @@ namespace MtgProxyPrinterEs.Services
         /// Searches Scryfall for an exact card name in a specific language.
         /// Uses the "!" prefix for exact name matching to avoid partial matches.
         /// Returns the first result or null if not found.
+        /// 
+        /// [fix] The unexpected result occurs when a preparation card is found first
+        /// example "Emeritus of Conflict" found by "Lightning Bolt".
+        /// Added FirstOrDefault predicate to check the card name
         /// </summary>
         private async Task<ScryfallCard?> SearchByNameAndLangAsync(string name, string lang)
         {
             await RateLimit();
             try
             {
-                var query = Uri.EscapeDataString($"!\"{name}\" lang:{lang}");
+                var query = Uri.EscapeDataString($"!\"{name}\" lang:{lang}");                
                 var response = await _http.GetAsync($"cards/search?q={query}");
                 if (!response.IsSuccessStatusCode) return null;
 
                 var json = await response.Content.ReadAsStringAsync();
                 var result = JsonConvert.DeserializeObject<ScryfallSearchResult>(json);
-                return result?.Data?.FirstOrDefault();
+                return result?.Data?
+                    .FirstOrDefault(
+                        x => x.Name.Equals(
+                            name,
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                    );
             }
             catch { return null; }
         }
@@ -139,30 +149,19 @@ namespace MtgProxyPrinterEs.Services
 
         /// <summary>
         /// Fetches all available printings of a card across all sets and languages.
-        /// Strategy:
-        /// 1. Search for the English version of the card to get its prints_search_uri.
-        /// 2. Use that URI with &include_multilingual=true to get all language variants.
         /// Only returns printings that have a valid image URL.
+        /// 
+        /// [fix] Does not re-search by card name
+        /// because the caller already has baseCard (entry.SelectedPrint).
         /// </summary>
-        /// <param name="cardName">English card name to look up.</param>
-        public async Task<List<ScryfallCard>> GetAllPrintsAsync(string cardName)
+        /// <param name="baseCard">Selected Card.</param>
+        public async Task<List<ScryfallCard>> GetAllPrintsAsync(ScryfallCard baseCard)
         {
-            await RateLimit();
             var allPrints = new List<ScryfallCard>();
             try
             {
-                // Step 1: Get the base English card to retrieve prints_search_uri
-                var query = Uri.EscapeDataString($"!\"{cardName}\" lang:en");
-                var response = await _http.GetAsync($"cards/search?q={query}");
-                if (!response.IsSuccessStatusCode) return allPrints;
-
-                var json = await response.Content.ReadAsStringAsync();
-                var result = JsonConvert.DeserializeObject<ScryfallSearchResult>(json);
-                var baseCard = result?.Data?.FirstOrDefault();
-
-                if (baseCard?.PrintsSearchUri == null) return allPrints;
-
-                // Step 2: Fetch all printings including multilingual versions
+                if (baseCard.PrintsSearchUri == null) return allPrints;
+                // Fetch all printings including multilingual versions
                 await RateLimit();
                 var printsResponse = await _http.GetAsync(baseCard.PrintsSearchUri + "&include_multilingual=true");
                 if (!printsResponse.IsSuccessStatusCode) return allPrints;
