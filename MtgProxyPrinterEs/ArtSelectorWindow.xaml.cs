@@ -69,7 +69,7 @@ namespace MtgProxyPrinterEs
             if (_entry.AvailablePrints.Any())
                 _allPrints = _entry.AvailablePrints;
             else
-                _allPrints = await _scryfall.GetAllPrintsAsync(_entry.CardName);
+                _allPrints = await _scryfall.GetAllPrintsAsync(_entry.SelectedPrint);
 
             ShowEditions();
         }
