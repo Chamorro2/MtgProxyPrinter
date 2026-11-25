@@ -100,24 +100,31 @@ namespace MtgProxyPrinterEs.Services
 
         /// <summary>
         /// Searches Scryfall for an exact card name in a specific language.
+        /// Uses the "!" prefix for exact name matching to avoid partial matches.
         /// Returns the first result or null if not found.
         /// 
         /// [fix] The unexpected result occurs when a preparation card is found first
         /// example "Emeritus of Conflict" found by "Lightning Bolt".
-        /// Use "cards/named?exact=" instead of adding the "!" prefix to "cards/search?q=".
+        /// Added FirstOrDefault predicate to check the card name
         /// </summary>
         private async Task<ScryfallCard?> SearchByNameAndLangAsync(string name, string lang)
         {
             await RateLimit();
             try
             {
-                var query = Uri.EscapeDataString($"\"{name}\" lang:{lang}");
-                var response = await _http.GetAsync($"cards/named?exact={query}");
+                var query = Uri.EscapeDataString($"!\"{name}\" lang:{lang}");                
+                var response = await _http.GetAsync($"cards/search?q={query}");
                 if (!response.IsSuccessStatusCode) return null;
 
                 var json = await response.Content.ReadAsStringAsync();
                 var result = JsonConvert.DeserializeObject<ScryfallSearchResult>(json);
-                return result?.Data?.FirstOrDefault();
+                return result?.Data?
+                    .FirstOrDefault(
+                        x => x.Name.Equals(
+                            name,
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                    );
             }
             catch { return null; }
         }
