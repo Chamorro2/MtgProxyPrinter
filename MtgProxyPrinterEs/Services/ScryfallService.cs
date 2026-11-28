@@ -39,21 +39,56 @@ namespace MtgProxyPrinterEs.Services
         /// </summary>
         private readonly SemaphoreSlim _rateLimiter = new(1, 1);
         private DateTime _lastRequest = DateTime.MinValue;
-        private const int DelayMs = 100; // Scryfall recommends max 10 requests/second
+
+        // The minimum delay time often causes TooManyRequests error, so delay it a little longer.
+        private const int DelayMsGeneral = 120; // Scryfall recommends max 10 requests/second. 
+        private const int DelayMsSearch = 600; // Scryfall recommends max 2 requests/second
 
         /// <summary>
         /// Ensures a minimum delay of 100ms between API requests.
         /// Uses a semaphore to prevent concurrent requests from bypassing the delay.
         /// </summary>
-        private async Task RateLimit()
+        private async Task<HttpResponseMessage> GetGeneralAsync(string url)
         {
             await _rateLimiter.WaitAsync();
             try
             {
                 var elapsed = (DateTime.Now - _lastRequest).TotalMilliseconds;
-                if (elapsed < DelayMs)
-                    await Task.Delay((int)(DelayMs - elapsed));
+                if (elapsed < DelayMsGeneral)
+                {
+                    await Task.Delay(DelayMsGeneral - (int)elapsed);
+                }
+                var response =await _http.GetAsync(url);
                 _lastRequest = DateTime.Now;
+                return response;
+            }
+            finally
+            {
+                _rateLimiter.Release();
+            }
+        }
+
+        /// <summary>
+        /// Ensures a minimum delay of 500ms between search API requests.
+        /// Use this:
+        /// - /cards/search
+        /// - /cards/named
+        /// - /cards/random
+        /// - /cards/collection
+        /// </summary>
+       private async Task<HttpResponseMessage> GetSearchAsync(string url)
+        {
+            await _rateLimiter.WaitAsync();
+            try
+            {
+                var elapsed = (DateTime.Now - _lastRequest).TotalMilliseconds;
+                if (elapsed < DelayMsSearch)
+                {
+                    await Task.Delay(DelayMsSearch - (int)elapsed);
+                }
+                var response = await _http.GetAsync(url);
+                _lastRequest = DateTime.Now;
+                return response;
             }
             finally
             {
@@ -105,11 +140,10 @@ namespace MtgProxyPrinterEs.Services
         /// </summary>
         private async Task<ScryfallCard?> SearchByNameAndLangAsync(string name, string lang)
         {
-            await RateLimit();
             try
             {
                 var query = Uri.EscapeDataString($"!\"{name}\" lang:{lang}");
-                var response = await _http.GetAsync($"cards/search?q={query}");
+                var response = await GetSearchAsync($"cards/search?q={query}");
                 if (!response.IsSuccessStatusCode) return null;
 
                 var json = await response.Content.ReadAsStringAsync();
@@ -125,10 +159,9 @@ namespace MtgProxyPrinterEs.Services
         /// </summary>
         private async Task<ScryfallCard?> GetCardBySetAndNumberAsync(string set, string number)
         {
-            await RateLimit();
             try
             {
-                var response = await _http.GetAsync($"cards/{set.ToLower()}/{number}");
+                var response = await GetGeneralAsync($"cards/{set.ToLower()}/{number}");
                 if (!response.IsSuccessStatusCode) return null;
 
                 var json = await response.Content.ReadAsStringAsync();
@@ -147,13 +180,12 @@ namespace MtgProxyPrinterEs.Services
         /// <param name="cardName">English card name to look up.</param>
         public async Task<List<ScryfallCard>> GetAllPrintsAsync(string cardName)
         {
-            await RateLimit();
             var allPrints = new List<ScryfallCard>();
             try
             {
                 // Step 1: Get the base English card to retrieve prints_search_uri
                 var query = Uri.EscapeDataString($"!\"{cardName}\" lang:en");
-                var response = await _http.GetAsync($"cards/search?q={query}");
+                var response = await GetSearchAsync($"cards/search?q={query}");
                 if (!response.IsSuccessStatusCode) return allPrints;
 
                 var json = await response.Content.ReadAsStringAsync();
@@ -163,8 +195,7 @@ namespace MtgProxyPrinterEs.Services
                 if (baseCard?.PrintsSearchUri == null) return allPrints;
 
                 // Step 2: Fetch all printings including multilingual versions
-                await RateLimit();
-                var printsResponse = await _http.GetAsync(baseCard.PrintsSearchUri + "&include_multilingual=true");
+                var printsResponse = await GetSearchAsync(baseCard.PrintsSearchUri + "&include_multilingual=true");
                 if (!printsResponse.IsSuccessStatusCode) return allPrints;
 
                 var printsJson = await printsResponse.Content.ReadAsStringAsync();
@@ -181,14 +212,13 @@ namespace MtgProxyPrinterEs.Services
 
         /// <summary>
         /// Downloads an image from a URL and returns the raw bytes.
-        /// Rate limited to respect Scryfall's image CDN.
         /// Returns null if the download fails for any reason.
+        /// This request needs no rate limit.
         /// </summary>
         public async Task<byte[]?> DownloadImageAsync(string url)
         {
             try
             {
-                await RateLimit();
                 return await _http.GetByteArrayAsync(url);
             }
             catch { return null; }
